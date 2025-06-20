@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftarkan Wajah Baru - Face Recognition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .camera-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .video-container {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        #video {
+            width: 480px;
+            height: 360px;
+            background: #000;
+        }
+
+        .canvas-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        #canvas {
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+
+        .photo-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            background: #f0f0f0;
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-item .photo-number {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .photo-item.capturing {
+            border: 3px solid #4CAF50;
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #ff9800, #f57c00);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            text-decoration: none;
+            font-size: 1.2em;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            #video {
+                width: 100%;
+                max-width: 360px;
+                height: auto;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-link">← Kembali</a>
+    
+    <div class="container">
+        <div class="header">
+            <h1>📷 Daftarkan Wajah Baru</h1>
+            <p>Posisikan wajah Anda di tengah kamera dan pastikan pencahayaan cukup</p>
+            <p style="color: #666; margin-top: 10px; font-size: 0.9em;">
+                💡 <strong>Tips:</strong> Anda bisa menambahkan multiple foto untuk orang yang sama untuk akurasi lebih tinggi
+            </p>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div class="camera-section">
+            <div class="video-container">
+                <video id="video" autoplay muted playsinline></video>
+            </div>
+            
+            <div class="canvas-container">
+                <canvas id="canvas" width="480" height="360"></canvas>
+                
+                <!-- Gallery untuk menampilkan foto yang diambil -->
+                <div id="photoGallery" style="display: none; margin-top: 20px;">
+                    <h3 style="text-align: center; margin-bottom: 15px;">📷 Foto yang Diambil</h3>
+                    <div id="photoGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; max-width: 600px; margin: 0 auto;">
+                        <!-- Foto akan ditampilkan di sini -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="startCamera" class="btn btn-primary">🎥 Nyalakan Kamera</button>
+                <button id="captureBtn" class="btn btn-secondary" disabled>📸 Ambil 10 Foto</button>
+                <button id="retakeBtn" class="btn btn-warning" style="display: none;">🔄 Foto Ulang</button>
+                <button id="stopCapture" class="btn btn-danger" style="display: none;">⏹️ Stop Capture</button>
+            </div>
+
+            <!-- Progress bar untuk capture -->
+            <div id="captureProgress" style="display: none; width: 100%; max-width: 400px; margin: 10px 0;">
+                <div style="background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden;">
+                    <div id="progressBar" style="background: linear-gradient(45deg, #4CAF50, #45a049); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                </div>
+                <div id="progressText" style="text-align: center; margin-top: 5px; font-weight: bold;">Foto 0/10</div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div class="form-group">
+                    <label for="photoCount">Jumlah Foto:</label>
+                    <select id="photoCount" style="width: 100%; padding: 8px; border: 2px solid #ddd; border-radius: 8px;">
+                        <option value="5">5 Foto</option>
+                        <option value="10" selected>10 Foto</option>
+                        <option value="15">15 Foto</option>
+                        <option value="20">20 Foto</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="captureDelay">Delay (detik):</label>
+                    <select id="captureDelay" style="width: 100%; padding: 8px; border: 2px solid #ddd; border-radius: 8px;">
+                        <option value="500">0.5 detik</option>
+                        <option value="1000" selected>1 detik</option>
+                        <option value="1500">1.5 detik</option>
+                        <option value="2000">2 detik</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="nameInput">Nama Lengkap:</label>
+                <input type="text" id="nameInput" placeholder="Masukkan nama lengkap (bisa yang sudah ada untuk menambah foto)..." maxlength="50">
+                <small style="color: #666; display: block; margin-top: 5px;">
+                    Jika nama sudah ada, foto akan ditambahkan ke database orang tersebut
+                </small>
+            </div>
+            
+            <div class="controls">
+                <button id="registerBtn" class="btn btn-primary" disabled>✅ Daftarkan/Tambah Foto</button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Sedang memproses...</p>
+        </div>
+    </div>
+
+    <script>
+        // Variabel global
+        let video, canvas, ctx;
+        let capturedImages = [];
+        let stream = null;
+        let isCapturing = false;
+        let captureInterval = null;
+
+        // Inisialisasi saat halaman dimuat
+        window.addEventListener('load', function() {
+            video = document.getElementById('video');
+            canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+
+            // Event listeners
+            document.getElementById('startCamera').addEventListener('click', startCamera);
+            document.getElementById('captureBtn').addEventListener('click', startMultipleCapture);
+            document.getElementById('retakeBtn').addEventListener('click', retakePhotos);
+            document.getElementById('stopCapture').addEventListener('click', stopCapture);
+            document.getElementById('registerBtn').addEventListener('click', registerFace);
+            document.getElementById('nameInput').addEventListener('input', validateForm);
+            
+            // Event listeners untuk setting
+            document.getElementById('photoCount').addEventListener('change', updateCaptureButtonText);
+            document.getElementById('captureDelay').addEventListener('change', updateCaptureButtonText);
+            
+            // Set initial button text
+            updateCaptureButtonText();
+        });
+
+        // Fungsi untuk menampilkan status
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+            
+            // Sembunyikan setelah 5 detik jika bukan error
+            if (type !== 'error') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Fungsi untuk menampilkan loading
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        // Mulai kamera
+        async function startCamera() {
+            try {
+                showStatus('Mengakses kamera...', 'info');
+                
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: { ideal: 480 },
+                        height: { ideal: 360 },
+                        facingMode: 'user'
+                    }
+                });
+
+                video.srcObject = stream;
+                
+                video.onloadedmetadata = function() {
+                    showStatus('Kamera berhasil diaktifkan!', 'success');
+                    document.getElementById('startCamera').disabled = true;
+                    document.getElementById('captureBtn').disabled = false;
+                };
+
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                showStatus('Gagal mengakses kamera. Pastikan izin kamera diberikan.', 'error');
+            }
+        }
+
+        // Mulai multiple capture
+        async function startMultipleCapture() {
+            if (!video.videoWidth || !video.videoHeight) {
+                showStatus('Tunggu hingga kamera siap...', 'error');
+                return;
+            }
+
+            // Ambil setting dari user
+            const totalPhotos = parseInt(document.getElementById('photoCount').value);
+            const captureDelay = parseInt(document.getElementById('captureDelay').value);
+
+            isCapturing = true;
+            capturedImages = [];
+            
+            // Update UI
+            document.getElementById('captureBtn').disabled = true;
+            document.getElementById('stopCapture').style.display = 'inline-block';
+            document.getElementById('captureProgress').style.display = 'block';
+            
+            // Update tombol capture text
+            document.getElementById('captureBtn').textContent = `📸 Ambil ${totalPhotos} Foto`;
+            
+            // Setup gallery
+            const photoGrid = document.getElementById('photoGrid');
+            photoGrid.innerHTML = '';
+            document.getElementById('photoGallery').style.display = 'block';
+            
+            // Buat placeholder untuk semua foto
+            for (let i = 0; i < totalPhotos; i++) {
+                const photoItem = document.createElement('div');
+                photoItem.className = 'photo-item';
+                photoItem.id = `photo-${i}`;
+                photoItem.innerHTML = `
+                    <div style="height: 80px; display: flex; align-items: center; justify-content: center; color: #666;">
+                        Menunggu...
+                    </div>
+                    <div class="photo-number">${i + 1}</div>
+                `;
+                photoGrid.appendChild(photoItem);
+            }
+
+            showStatus(`Memulai capture ${totalPhotos} foto dengan delay ${captureDelay/1000} detik...`, 'info');
+            
+            // Mulai countdown
+            let countdown = 3;
+            const countdownInterval = setInterval(() => {
+                if (countdown > 0) {
+                    showStatus(`Bersiap... ${countdown}`, 'info');
+                    countdown--;
+                } else {
+                    clearInterval(countdownInterval);
+                    startCaptureSequence(totalPhotos, captureDelay);
+                }
+            }, 1000);
+        }
+
+        // Sequence untuk capture foto
+        function startCaptureSequence(totalPhotos, captureDelay) {
+            let photoCount = 0;
+            
+            const capture = () => {
+                if (!isCapturing || photoCount >= totalPhotos) {
+                    finishCapture();
+                    return;
+                }
+
+                // Ambil foto
+                const imageData = capturePhotoFrame();
+                if (imageData) {
+                    capturedImages.push(imageData);
+                    
+                    // Update UI
+                    updatePhotoInGallery(photoCount, imageData);
+                    updateProgress(photoCount + 1, totalPhotos);
+                    
+                    showStatus(`Foto ${photoCount + 1}/${totalPhotos} berhasil diambil`, 'success');
+                    
+                    photoCount++;
+                    
+                    // Schedule next capture
+                    if (photoCount < totalPhotos && isCapturing) {
+                        setTimeout(capture, captureDelay);
+                    } else {
+                        finishCapture();
+                    }
+                } else {
+                    showStatus('Gagal mengambil foto, mencoba lagi...', 'error');
+                    setTimeout(capture, captureDelay);
+                }
+            };
+
+            capture();
+        }
+
+        // Ambil satu frame foto
+        function capturePhotoFrame() {
+            try {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                return canvas.toDataURL('image/jpeg', 0.8);
+            } catch (error) {
+                console.error('Error capturing frame:', error);
+                return null;
+            }
+        }
+
+        // Update foto di gallery
+        function updatePhotoInGallery(index, imageData) {
+            const photoItem = document.getElementById(`photo-${index}`);
+            if (photoItem) {
+                photoItem.classList.add('capturing');
+                photoItem.innerHTML = `
+                    <img src="${imageData}" alt="Foto ${index + 1}">
+                    <div class="photo-number">${index + 1}</div>
+                `;
+                
+                // Hapus efek animasi setelah sebentar
+                setTimeout(() => {
+                    photoItem.classList.remove('capturing');
+                }, 500);
+            }
+        }
+
+        // Update progress bar
+        function updateProgress(current, total) {
+            const percentage = (current / total) * 100;
+            document.getElementById('progressBar').style.width = percentage + '%';
+            document.getElementById('progressText').textContent = `Foto ${current}/${total}`;
+        }
+
+        // Selesai capture
+        function finishCapture() {
+            isCapturing = false;
+            
+            // Update UI
+            document.getElementById('stopCapture').style.display = 'none';
+            document.getElementById('retakeBtn').style.display = 'inline-block';
+            
+            if (capturedImages.length > 0) {
+                showStatus(`Berhasil mengambil ${capturedImages.length} foto! Masukkan nama dan daftarkan.`, 'success');
+                validateForm();
+            } else {
+                showStatus('Tidak ada foto yang berhasil diambil.', 'error');
+                retakePhotos();
+            }
+        }
+
+        // Stop capture
+        function stopCapture() {
+            isCapturing = false;
+            showStatus('Proses capture dihentikan.', 'info');
+            finishCapture();
+        }
+
+        // Foto ulang
+        function retakePhotos() {
+            // Reset semua data
+            capturedImages = [];
+            isCapturing = false;
+            
+            // Reset UI
+            const totalPhotos = parseInt(document.getElementById('photoCount').value);
+            document.getElementById('captureBtn').disabled = false;
+            document.getElementById('captureBtn').textContent = `📸 Ambil ${totalPhotos} Foto`;
+            document.getElementById('retakeBtn').style.display = 'none';
+            document.getElementById('stopCapture').style.display = 'none';
+            document.getElementById('captureProgress').style.display = 'none';
+            document.getElementById('photoGallery').style.display = 'none';
+            document.getElementById('registerBtn').disabled = true;
+            
+            showStatus('Siap untuk mengambil foto baru.', 'info');
+        }
+
+        // Update text tombol capture
+        function updateCaptureButtonText() {
+            const totalPhotos = parseInt(document.getElementById('photoCount').value);
+            const delay = parseInt(document.getElementById('captureDelay').value);
+            document.getElementById('captureBtn').textContent = `📸 Ambil ${totalPhotos} Foto (${delay/1000}s delay)`;
+        }
+
+        // Validasi form
+        function validateForm() {
+            const name = document.getElementById('nameInput').value.trim();
+            const hasImages = capturedImages.length > 0;
+            const hasName = name.length > 0;
+            
+            document.getElementById('registerBtn').disabled = !(hasImages && hasName);
+        }
+
+        // Daftarkan wajah
+        async function registerFace() {
+            const name = document.getElementById('nameInput').value.trim();
+            
+            if (!name) {
+                showStatus('Nama tidak boleh kosong!', 'error');
+                return;
+            }
+
+            if (capturedImages.length === 0) {
+                showStatus('Ambil foto terlebih dahulu!', 'error');
+                return;
+            }
+
+            try {
+                showLoading(true);
+                showStatus(`Memproses pendaftaran ${capturedImages.length} foto untuk ${name}...`, 'info');
+
+                let successCount = 0;
+                let errorMessages = [];
+
+                // Proses setiap foto
+                for (let i = 0; i < capturedImages.length; i++) {
+                    try {
+                        const response = await fetch('/api/register_face', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                name: name,
+                                image: capturedImages[i]
+                            })
+                        });
+
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            successCount++;
+                            // Update progress
+                            updateRegistrationProgress(i + 1, capturedImages.length, successCount);
+                        } else {
+                            errorMessages.push(`Foto ${i + 1}: ${result.message}`);
+                        }
+
+                    } catch (error) {
+                        console.error(`Error processing photo ${i + 1}:`, error);
+                        errorMessages.push(`Foto ${i + 1}: Error koneksi`);
+                    }
+                }
+
+                // Tampilkan hasil
+                if (successCount > 0) {
+                    showStatus(`Berhasil mendaftarkan ${successCount}/${capturedImages.length} foto untuk ${name}!`, 'success');
+                    
+                    // Reset form setelah 2 detik
+                    setTimeout(() => {
+                        document.getElementById('nameInput').value = '';
+                        retakePhotos();
+                    }, 2000);
+                } else {
+                    showStatus('Tidak ada foto yang berhasil didaftarkan: ' + errorMessages.join(', '), 'error');
+                }
+
+                if (errorMessages.length > 0 && successCount > 0) {
+                    console.warn('Some photos failed:', errorMessages);
+                }
+
+            } catch (error) {
+                console.error('Error registering faces:', error);
+                showStatus('Terjadi kesalahan saat mendaftarkan wajah.', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Update progress registrasi
+        function updateRegistrationProgress(current, total, success) {
+            const progressText = document.getElementById('progressText');
+            if (progressText) {
+                progressText.textContent = `Memproses ${current}/${total} (Berhasil: ${success})`;
+            }
+        }
+
+        // Cleanup saat halaman ditutup
+        window.addEventListener('beforeunload', function() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validasi Wajah - Face Recognition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .camera-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .video-container {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        #video {
+            width: 480px;
+            height: 360px;
+            background: #000;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #ff9800, #f57c00);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result-content {
+            text-align: center;
+        }
+
+        .result-content.success {
+            color: #155724;
+        }
+
+        .result-content.error {
+            color: #721c24;
+        }
+
+        .result-name {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .result-confidence {
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .result-message {
+            font-size: 1em;
+            color: #666;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            text-decoration: none;
+            font-size: 1.2em;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .stats-section {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stats-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .stats-content {
+            color: #666;
+        }
+
+        .history-section {
+            background: #f1f8e9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .history-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .history-item.unknown {
+            border-left-color: #f44336;
+        }
+
+        .history-time {
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            #video {
+                width: 100%;
+                max-width: 360px;
+                height: auto;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-link">← Kembali</a>
+    
+    <div class="container">
+        <div class="header">
+            <h1>✅ Validasi Wajah</h1>
+            <p>Posisikan wajah Anda di tengah kamera untuk dikenali</p>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div class="stats-section">
+            <div class="stats-title">📊 Statistik Sistem</div>
+            <div class="stats-content">
+                <span id="totalFaces">0</span> wajah terdaftar dalam sistem
+            </div>
+        </div>
+
+        <div class="camera-section">
+            <div class="video-container">
+                <video id="video" autoplay muted playsinline></video>
+            </div>
+
+            <div class="controls">
+                <button id="startCamera" class="btn btn-primary">🎥 Nyalakan Kamera</button>
+                <button id="validateBtn" class="btn btn-secondary" disabled>🔍 Validasi Wajah</button>
+                <button id="stopCamera" class="btn btn-warning" style="display: none;">⏹️ Matikan Kamera</button>
+            </div>
+        </div>
+
+        <div class="result-section">
+            <div id="resultContent" class="result-content">
+                <div style="color: #666; font-size: 1.2em;">
+                    🔍 Siap untuk validasi wajah
+                </div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Sedang memproses validasi...</p>
+        </div>
+
+        <div class="history-section">
+            <div class="history-title">📋 Riwayat Validasi</div>
+            <div id="historyList" class="history-list">
+                <div style="color: #666; text-align: center; padding: 20px;">
+                    Belum ada riwayat validasi
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variabel global
+        let video;
+        let stream = null;
+        let validationHistory = [];
+
+        // Inisialisasi saat halaman dimuat
+        window.addEventListener('load', function() {
+            video = document.getElementById('video');
+
+            // Event listeners
+            document.getElementById('startCamera').addEventListener('click', startCamera);
+            document.getElementById('validateBtn').addEventListener('click', validateFace);
+            document.getElementById('stopCamera').addEventListener('click', stopCamera);
+
+            // Muat statistik
+            loadStats();
+        });
+
+        // Fungsi untuk menampilkan status
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+            
+            // Sembunyikan setelah 5 detik jika bukan error
+            if (type !== 'error') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Fungsi untuk menampilkan loading
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        // Muat statistik
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/get_registered_faces');
+                const data = await response.json();
+                document.getElementById('totalFaces').textContent = data.total;
+                
+                if (data.total === 0) {
+                    showStatus('Belum ada wajah yang terdaftar. Daftarkan wajah terlebih dahulu.', 'info');
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Mulai kamera
+        async function startCamera() {
+            try {
+                showStatus('Mengakses kamera...', 'info');
+                
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: { ideal: 480 },
+                        height: { ideal: 360 },
+                        facingMode: 'user'
+                    }
+                });
+
+                video.srcObject = stream;
+                
+                video.onloadedmetadata = function() {
+                    showStatus('Kamera berhasil diaktifkan! Siap untuk validasi.', 'success');
+                    document.getElementById('startCamera').style.display = 'none';
+                    document.getElementById('validateBtn').disabled = false;
+                    document.getElementById('stopCamera').style.display = 'inline-block';
+                };
+
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                showStatus('Gagal mengakses kamera. Pastikan izin kamera diberikan.', 'error');
+            }
+        }
+
+        // Matikan kamera
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            video.srcObject = null;
+            
+            // Update tombol
+            document.getElementById('startCamera').style.display = 'inline-block';
+            document.getElementById('validateBtn').disabled = true;
+            document.getElementById('stopCamera').style.display = 'none';
+            
+            // Reset hasil
+            document.getElementById('resultContent').innerHTML = `
+                <div style="color: #666; font-size: 1.2em;">
+                    🔍 Kamera dimatikan
+                </div>
+            `;
+            
+            showStatus('Kamera berhasil dimatikan.', 'info');
+        }
+
+        // Validasi wajah
+        async function validateFace() {
+            if (!video.videoWidth || !video.videoHeight) {
+                showStatus('Tunggu hingga kamera siap...', 'error');
+                return;
+            }
+
+            try {
+                showLoading(true);
+                
+                // Buat canvas untuk capture gambar
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                
+                // Gambar frame dari video ke canvas
+                ctx.drawImage(video, 0, 0);
+                
+                // Konversi ke base64
+                const imageData = canvas.toDataURL('image/jpeg', 0.8);
+
+                const response = await fetch('/api/validate_face', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image: imageData
+                    })
+                });
+
+                const result = await response.json();
+                
+                // Tampilkan hasil
+                displayResult(result);
+                
+                // Tambah ke riwayat
+                addToHistory(result);
+
+            } catch (error) {
+                console.error('Error validating face:', error);
+                showStatus('Terjadi kesalahan saat validasi wajah.', 'error');
+                
+                document.getElementById('resultContent').innerHTML = `
+                    <div class="result-content error">
+                        <div class="result-name">❌ Error</div>
+                        <div class="result-message">Terjadi kesalahan sistem</div>
+                    </div>
+                `;
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Tampilkan hasil validasi
+        function displayResult(result) {
+            const resultDiv = document.getElementById('resultContent');
+            
+            if (result.success) {
+                resultDiv.innerHTML = `
+                    <div class="result-content success">
+                        <div class="result-name">✅ ${result.name}</div>
+                        <div class="result-confidence">Tingkat Kepercayaan: ${result.confidence}%</div>
+                        <div class="result-message">Wajah berhasil dikenali!</div>
+                    </div>
+                `;
+                showStatus(`Selamat datang, ${result.name}!`, 'success');
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="result-content error">
+                        <div class="result-name">❌ Tidak Dikenal</div>
+                        <div class="result-message">${result.message}</div>
+                    </div>
+                `;
+                showStatus(result.message, 'error');
+            }
+        }
+
+        // Tambah ke riwayat validasi
+        function addToHistory(result) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('id-ID');
+            const dateStr = now.toLocaleDateString('id-ID');
+            
+            const historyItem = {
+                time: `${dateStr} ${timeStr}`,
+                name: result.name || 'Unknown',
+                success: result.success,
+                confidence: result.confidence || 0
+            };
+            
+            validationHistory.unshift(historyItem);
+            
+            // Batasi riwayat maksimal 10 item
+            if (validationHistory.length > 10) {
+                validationHistory = validationHistory.slice(0, 10);
+            }
+            
+            updateHistoryDisplay();
+        }
+
+        // Update tampilan riwayat
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('historyList');
+            
+            if (validationHistory.length === 0) {
+                historyList.innerHTML = `
+                    <div style="color: #666; text-align: center; padding: 20px;">
+                        Belum ada riwayat validasi
+                    </div>
+                `;
+                return;
+            }
+            
+            historyList.innerHTML = validationHistory.map(item => `
+                <div class="history-item ${item.success ? '' : 'unknown'}">
+                    <div style="font-weight: bold;">
+                        ${item.success ? '✅' : '❌'} ${item.name}
+                        ${item.success ? `(${item.confidence}%)` : ''}
+                    </div>
+                    <div class="history-time">${item.time}</div>
+                </div>
+            `).join('');
+        }
+
+        // Cleanup saat halaman ditutup
+        window.addEventListener('beforeunload', function() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>
