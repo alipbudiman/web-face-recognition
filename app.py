@@ -215,7 +215,8 @@ def validate_face():
         results = []
         
         for face_encoding in face_encodings:
-            name, confidence, recognized = improved_face_matching(face_encoding)
+            # default treshold 60%
+            name, confidence, recognized = improved_face_matching(face_encoding, threshold=0.6)
             results.append({
                 'name': name,
                 'confidence': confidence,
@@ -334,7 +335,7 @@ def delete_person(name):
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error: {e}'})
 
-@app.route('/api/reset_all_data', methods=['POST'])
+@app.route('/api/reset_all_data', methods=['GET'])
 def reset_all_data():
     """API untuk reset semua data wajah"""
     try:
