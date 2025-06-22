@@ -1,5 +1,5 @@
 # Sistem Deteksi & Pengenalan Wajah Berbasis Web 
-## UTS Pembelajaran Mesin Lanjut
+## UAS Pembelajaran Mesin Lanjut
 
 _oleh Alif Budiman Wahabbi_
 
