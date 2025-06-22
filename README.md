@@ -51,7 +51,52 @@ Sistem ini cocok sebagai _template_ atau _starting point_ untuk pengembangan apl
 ## Deskripsi Sistem
 Aplikasi ini adalah sistem pengenalan wajah berbasis web yang terdiri dari backend Python (Flask + face_recognition) dan frontend JavaScript (face-api.js). Sistem ini mendukung pendaftaran wajah (multiple foto per orang), validasi wajah real-time, serta API manajemen data wajah.
 
+### Arsitektur Sistem
 
+![Arsitektur Sistem](assets/img/image.png)
+
+Sistem ini menerapkan arsitektur client-server dengan komponen utama sebagai berikut:
+
+**Frontend (Client-Side):**
+- HTML5, CSS3, dan JavaScript untuk antarmuka pengguna
+- face-api.js untuk deteksi wajah secara real-time di browser
+- WebRTC untuk akses kamera dan streaming video
+- Canvas API untuk manipulasi dan pratinjau gambar
+
+**Backend (Server-Side):**
+- Flask (Python) sebagai web framework dan server API
+- Library face_recognition untuk encoding dan pencocokan wajah
+- OpenCV untuk praproses gambar
+- Pickle untuk serialisasi dan penyimpanan data encoding
+- File system untuk menyimpan foto referensi
+
+**Alur Kerja Sistem:**
+1. Pengguna mengakses aplikasi melalui browser
+2. Frontend memuat model face-api.js dan mengaktifkan kamera
+3. Deteksi wajah dilakukan secara real-time di sisi browser
+4. Gambar yang valid dikirim ke backend melalui API
+5. Backend melakukan encoding dan pencocokan wajah
+6. Hasil pengenalan dikirim kembali ke frontend untuk ditampilkan
+
+### Pendaftaran Wajah Baru
+
+![Daftar Wajah Baru](assets/img/image2.png)
+
+Sistem akan mengambil foto wajah (setelah terdeteksi) sebanyak jumlah yang dipilih oleh pengguna.
+
+![Capture Wajah](assets/img/image3.png)
+
+Setelah itu, gambar dapat didaftarkan ke sistem dengan memasukkan nama pengguna.
+
+### Validasi Wajah
+
+![Validasi Wajah](assets/img/preview.gif)
+
+Sistem menggunakan threshold kepercayaan lebih dari 60% untuk mengenali wajah yang sudah terdaftar di database.
+
+![Validasi Wajah Ditolak](assets/img/preview_riject.gif)
+
+Jika tingkat kepercayaan kurang dari 60% atau wajah belum terdaftar, sistem akan menampilkan notifikasi bahwa wajah tidak dikenali.
 
 ---
 
